@@ -3,15 +3,42 @@ var ttsExtension = "fnolakpojfhnmkkmmofbicmehjodjekf";
 var recognized = [];
 var flow;
 var currentFlow = 0;
+var recordable = false;
+var suite = "test1";
+
+function makePath(p){
+  if (typeof p == "string"){
+    return [suite, p].join("/");
+  }
+  return p.splice(0,0, suite).join("/");
+}
 
 function showMessage(msg){
-  $(".message").html(msg);
+  $(".container").append("<div class=\"message\">"+msg+"</div>");
+  scrollAnimate();
 }
 
-function showResponse(msg){
-  $(".response").html(msg);
+function showResponse(msg, isLast){
+  if (isLast){
+    $(".response").last().html(msg)
+  }
+  else {
+    $(".container").append("<div class=\"response\">"+msg+"</div>");
+    scrollAnimate();
+  }
 }
 
+function scrollAnimate(){
+  $("html, body").animate({ scrollTop: $(document).height() }, 1000);
+}
+
+
+function setRecording(status){
+  recordable = status;
+  if (status){
+    showResponse("...")
+  }
+}
 
 
 //cross extension
@@ -27,29 +54,10 @@ function ttsSay(toSay, lang, cb){
 
 
 var recognition = new webkitSpeechRecognition();
-recognition.lang = globalLang;
-//recognition.continuous = true;
-
-recognition.onstart = function() {
-  console.log("start recognition");
-};
-
-recognition.onerror = function(event) {
-  console.error(event.error);
-};
-
-recognition.onend = function() {
-  showResponse(recognized[recognized.length-1]);
-  triggerNext();
-};
-
-recognition.onresult = function(event) {
-  var last = event.results.length - 1;
-  recognized.push(event.results[last][0].transcript);
-};
 
 
 function triggerFlow(currentFlow){
+
   if (currentFlow >= flow.length) {
     //alert("end of the story");
     return;
@@ -62,7 +70,11 @@ function triggerFlow(currentFlow){
     });
   }
   else if (f.type == "response"){
-    recognition.start();
+    setRecording(true);
+  }
+  else if (f.type == "image"){
+    $(".container").append("<div class=\"image\"><img src=\""+makePath(f.content) + "\"></div>");
+    triggerNext();
   }
 }
 
@@ -71,11 +83,34 @@ function triggerNext(){
 }
 
 $(document).ready(function(){
-  $.getJSON("test1.json", function(data){
+  $.getJSON(makePath("manifest.json"), function(data){
     flow = data.flow;
     if (data.lang) globalLang = data.lang;
 
-    
+    // setup recognition
+    recognition.lang = globalLang;
+    recognition.continuous = true;
+
+    recognition.onerror = function(event) {
+      console.error(event.error);
+    };
+
+    recognition.onend = function() {
+      
+    };
+
+    recognition.onresult = function(event) {
+      if (recordable){
+        var last = event.results.length - 1;
+        recognized.push(event.results[last][0].transcript);
+        showResponse(recognized[recognized.length-1], true);
+        setRecording(false);
+        triggerNext();   
+      }
+    };
+
+    recognition.start();
+
     triggerFlow(currentFlow);
 
   }).fail(function() {
