@@ -1,0 +1,17 @@
+body{
+	background-color: #BF4518;
+}
+
+.message{
+	color: #F9EBC1;
+	font-size: 60px;
+	text-align: center;
+	padding-top:200px;
+}
+
+.response{
+	color: #F9EBC1;
+	font-size: 40px;
+	text-align: center;
+	padding-top:100px;
+}
