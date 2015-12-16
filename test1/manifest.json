@@ -9,12 +9,10 @@
 			"next":"1.2"
 		},
 		"1.2":{
-			"id":"1.2",
 			"type":"response",
 			"next":"1.3"
 		},
 		"1.3":{
-			"id":"1.3",
 			"type":"say",
 			"content":"Wollen Sie ein Video anzusehen?",
 			"next":"1.4"
@@ -28,12 +26,12 @@
 		},
 		"1.5.1":{
 			"type":"video",
-			"content":"sample.mp4",
+			"content":"sampleshort.mp4",
 			"next":"2.1"
 		},
 		"1.5.2":{
 			"type":"say",
-			"content":"Okay, tell me in German what it is?",
+			"content":"Okay, sagen Sie mir auf Deutsch.",
 			"next":"2.1"
 		},
 		"2.1":{
@@ -53,14 +51,58 @@
 			],
 			"next":"2.4.2"
 		},
-		"2.4.1":{
+		"2.4.1":{ 
 			"type":"say",
-			"content":"Korrekt, Tschüss",
-			"next":"end"
+			"content":"Korrekt",
+			"next":"3.1"
 		},
 		"2.4.2":{
 			"type":"say",
-			"content":"Das ist ein Auto, Tschüss",
+			"content":"Das ist ein Auto.",
+			"next":"3.1"
+		},
+		"3.1":{
+			"type":"image",
+			"content":"brauhaus.jpg",
+			"next":"3.2"
+		},
+		"3.2":{
+			"type":"say",
+			"content":"Was ist das?",
+			"next":"3.3"
+		},
+		"3.3":{
+			"type":"response",
+			"accept":[
+				["brauhaus","3.4.1"]
+			],
+			"next":"3.4.2"
+		},
+		"3.4.1":{
+			"type":"say",
+			"content":"Du hast recht",
+			"next":"4.1"
+		},
+		"3.4.2":{
+			"type":"say",
+			"content":"Es ist ein Brauhaus",
+			"next":"4.1"
+		},
+		"4.1":{
+			"type":"say",
+			"content":"Haben Sie einen Lehrer suchen?",
+			"next":"4.2"
+		},
+		"4.2":{
+			"type":"response",
+			"accept":[
+				["ja","5.1"]
+			],
+			"next":"end"
+		},
+		"5.1":{
+			"type":"link",
+			"content":"http://opentokrtc.com/efresearch",
 			"next":"end"
 		}
 	}

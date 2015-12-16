@@ -3,7 +3,6 @@ var ttsExtension = "fnolakpojfhnmkkmmofbicmehjodjekf";
 var recognized = [];
 var flow;
 var currentFlow;
-var recordable = false;
 var suite = "test1";
 
 function makePath(p){
@@ -33,14 +32,6 @@ function scrollAnimate(){
 }
 
 
-function setRecording(status){
-  recordable = status;
-  if (status){
-    showResponse("...")
-  }
-}
-
-
 //cross extension
 function ttsSay(toSay, lang, cb){
   showMessage(toSay);
@@ -48,7 +39,6 @@ function ttsSay(toSay, lang, cb){
     function(response) {
       cb(response);
     });
-  
 }
 
 
@@ -57,9 +47,13 @@ var recognition = new webkitSpeechRecognition();
 
 
 function triggerFlow(id){
+  currentFlow = id;
+  var f = flow[currentFlow];
 
-  var f = flow[id];
-  if (!f) return;
+  if (id == "end" || !f){
+    showMessage("Ende");
+    return;
+  }
 
   if (f.type == "say"){
     ttsSay(f.content, globalLang, function(response){
@@ -67,7 +61,8 @@ function triggerFlow(id){
     });
   }
   else if (f.type == "response"){
-    setRecording(true);
+    recognition.start();
+    showResponse("...");
   }
   else if (f.type == "image"){
     $(".container").append("<div class=\"image\"><img src=\""+makePath(f.content) + "\"></div>");
@@ -83,13 +78,14 @@ function triggerFlow(id){
       triggerNext();
     });
   }
+  else if (f.type == "link"){
+    window.open(f.content, '_blank');
+    triggerNext();
+  }
 }
 
 function triggerNext(){
-  var f = flow[currentFlow];
-  if (!f) return;
-  if (f.next) currentFlow = f.next;
-  triggerFlow(currentFlow);
+  flow[currentFlow] && triggerFlow(flow[currentFlow].next);
 }
 
 $(document).ready(function(){
@@ -101,48 +97,47 @@ $(document).ready(function(){
 
     // setup recognition
     recognition.lang = globalLang;
-    recognition.continuous = true;
 
     recognition.onerror = function(event) {
       console.error(event.error);
     };
 
     recognition.onend = function() {
-      
+      console.log("recog ended");
+      var last = recognized[recognized.length-1];
+      showResponse(last, true);
+        
+      //judge acceptance
+      var f = flow[currentFlow];
+      var triggered = false;
+
+      if (f.accept){
+        for(var i=0; i<f.accept.length;i++){
+          var re = new RegExp(f.accept[i][0], 'i');
+          var next = f.accept[i][1];
+          if (re.test(last)){
+            triggered = true;
+            triggerFlow(next);
+            console.log("accepted: " + next);
+            break;
+          }
+        }
+      }
+
+      if (!triggered){
+        console.log("default next triggered");
+        triggerNext();
+      } 
     };
 
     recognition.onresult = function(event) {
-      if (recordable){
-        // save the recognized sentence
-        var last = event.results[event.results.length-1][0].transcript ;
-        recognized.push(last);
-        showResponse(last, true);
-        setRecording(false);
-        
-        //judge acceptance
-        var f = flow[currentFlow];
-        if (f.accept){
-          for(var i=0; i<f.accept.length;i++){
-            var re = new RegExp(f.accept[i][0], 'i');
-            var next = f.accept[i][1];
-            if (re.test(last)){
-              triggerFlow(next);
-              console.log("accepted: " + next);
-              break;
-            }
-            console.log("not accepted, just move on");
-            triggerNext();
-          }
-        }
-        else {
-          triggerNext();
-        }
-      }
+      // save the recognized sentence
+      var last = event.results[event.results.length-1][0].transcript;
+      recognized.push(last);
+
     };
 
-
-    // now start
-    recognition.start();
+    // now start the first flow
     triggerFlow(currentFlow);
 
   }).fail(function() {
