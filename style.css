@@ -2,6 +2,10 @@ body{
 	background-color: #BF4518;
 }
 
+.container{
+	padding-top: 20px;
+}
+
 .message, .response{
 	color: #F9EBC1;
 	font-size: 60px;
